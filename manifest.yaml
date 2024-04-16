@@ -25,6 +25,43 @@ metadata:
   labels:
     name: dev
 
+---
+#Creation des secrets pour chaque namespace.
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stripe-secret
+  namespace: prod
+type: Opaque
+data:
+  STRIPE_PUBLISHABLE_KEY: cGtfdGVzdF81MVAwbUlOQms1NnRxRVp3Y0VnRXZLanVveEJQdnBLZTB6Mklhc1dDdjBWSFlJNzZjZVVXOWRQR01Xb2xsTk1hRFliMzZ1NlZpYlNzV3c4dGU1UHcxWXVUSjAwZWh5YTBheHY=
+  STRIPE_SECRET_KEY: c2tfdGVzdF81MVAwbUlOQms1NnRxRVp3Y3dJUXVVdEt6R21FdGEyeThXbUk4NkZtdUFJbjJhT2hYV3NZcTJLZXRlcWRMTnpDODBYNFR5M005WXdHR3FHNURlZWNqZTdMQzAwU3pmYm8yaVU=
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stripe-secret
+  namespace: preprod
+type: Opaque
+data:
+  STRIPE_PUBLISHABLE_KEY: cGtfdGVzdF81MVAwbUlOQms1NnRxRVp3Y0VnRXZLanVveEJQdnBLZTB6Mklhc1dDdjBWSFlJNzZjZVVXOWRQR01Xb2xsTk1hRFliMzZ1NlZpYlNzV3c4dGU1UHcxWXVUSjAwZWh5YTBheHY=
+  STRIPE_SECRET_KEY: c2tfdGVzdF81MVAwbUlOQms1NnRxRVp3Y3dJUXVVdEt6R21FdGEyeThXbUk4NkZtdUFJbjJhT2hYV3NZcTJLZXRlcWRMTnpDODBYNFR5M005WXdHR3FHNURlZWNqZTdMQzAwU3pmYm8yaVU=
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stripe-secret
+  namespace: dev
+type: Opaque
+data:
+  STRIPE_PUBLISHABLE_KEY: cGtfdGVzdF81MVAwbUlOQms1NnRxRVp3Y0VnRXZLanVveEJQdnBLZTB6Mklhc1dDdjBWSFlJNzZjZVVXOWRQR01Xb2xsTk1hRFliMzZ1NlZpYlNzV3c4dGU1UHcxWXVUSjAwZWh5YTBheHY=
+  STRIPE_SECRET_KEY: c2tfdGVzdF81MVAwbUlOQms1NnRxRVp3Y3dJUXVVdEt6R21FdGEyeThXbUk4NkZtdUFJbjJhT2hYV3NZcTJLZXRlcWRMTnpDODBYNFR5M005WXdHR3FHNURlZWNqZTdMQzAwU3pmYm8yaVU=
+
 --- #Creation des services
 
 apiVersion: v1
@@ -79,47 +116,70 @@ spec:
     protocol: TCP
     targetPort: 5005
 
---- #Creation des ingress
+#Creation des ingress
 
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-flask-svc
-  namespace: prod
-spec:
-  defaultBackend:
-    service:
-      name: flask-svc
-      port:
-        number: 5005
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: mon-ingress
+#  namespace: prod
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+#spec:
+#  rules:
+#  - host: mondomaine.com
+#    http:
+#      paths:
+#      - pathType: Prefix
+#        path: /
+#        backend:
+#          service:
+#            name: flaskapp-deployment-prod
+#            port:
+#              number: 80
 
----
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: mon-ingress
+#  namespace: preprod
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+#spec:
+#  rules:
+#  - host: mondomaine.com
+#    http:
+#      paths:
+#      - pathType: Prefix
+#        path: /
+#        backend:
+#          service:
+#            name: flaskapp-deployment-prod
+#            port:
+#              number: 80
 
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-flask-svc
-  namespace: preprod
-spec:
-  defaultBackend:
-    service:
-      name: flask-svc
-      port:
-        number: 5005
-
----
-
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-flask-svc
-  namespace: dev
-spec:
-  defaultBackend:
-    service:
-      name: flask-svc
-      port:
-        number: 5005
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: mon-ingress
+#  namespace: dev
+#  annotations:
+#    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+#spec:
+#  rules:
+#  - host: mondomaine.com
+#    http:
+#      paths:
+#      - pathType: Prefix
+#        path: /
+#        backend:
+#          service:
+#            name: flaskapp-deployment-prod
+#            port:
+#              number: 80
 
 --- #Création des configmaps
 
@@ -292,30 +352,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: flaskapp-deployment
-  minReplicas: 3
-  maxReplicas: 50
-  behavior:
-    scaleUp:
-      # scale up immediat 
-      stabilizationWindowSeconds: 0
-      policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 5
-      - type: Pods
-        value: 4
-        periodSeconds: 5
-      selectPolicy: Max
-    scaleDown:
-      # 300 par defaut, donc 5 min avant scale down
-      stabilizationWindowSeconds: 10
-      policies:
-      # type : Pods ou Percent
-      - type: Percent
-        # enleve 50% des pods
-        value: 50
-        # Toutes les 5s. Période max 30min (1800s)
-        periodSeconds: 5
+  minReplicas: 1
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
@@ -323,17 +361,6 @@ spec:
       target:
         type: Utilization
         averageUtilization: 50
-status:
-  observedGeneration: 1
-  currentReplicas: 1
-  desiredReplicas: 1
-  currentMetrics:
-  - type: Resource
-    resource:
-      name: cpu
-      current:
-        averageUtilization: 0
-        averageValue: 0
 
 ---
 
@@ -347,30 +374,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: flaskapp-deployment
-  minReplicas: 3
-  maxReplicas: 50
-  behavior:
-    scaleUp:
-      # scale up immediat 
-      stabilizationWindowSeconds: 0
-      policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 5
-      - type: Pods
-        value: 4
-        periodSeconds: 5
-      selectPolicy: Max
-    scaleDown:
-      # 300 par defaut, donc 5 min avant scale down
-      stabilizationWindowSeconds: 10
-      policies:
-      # type : Pods ou Percent
-      - type: Percent
-        # enleve 50% des pods
-        value: 50
-        # Toutes les 5s. Période max 30min (1800s)
-        periodSeconds: 5
+  minReplicas: 1
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
@@ -378,17 +383,6 @@ spec:
       target:
         type: Utilization
         averageUtilization: 50
-status:
-  observedGeneration: 1
-  currentReplicas: 1
-  desiredReplicas: 1
-  currentMetrics:
-  - type: Resource
-    resource:
-      name: cpu
-      current:
-        averageUtilization: 0
-        averageValue: 0
 
 ---
 
@@ -402,30 +396,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: flaskapp-deployment
-  minReplicas: 3
-  maxReplicas: 50
-  behavior:
-    scaleUp:
-      # scale up immediat 
-      stabilizationWindowSeconds: 0
-      policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 5
-      - type: Pods
-        value: 4
-        periodSeconds: 5
-      selectPolicy: Max
-    scaleDown:
-      # 300 par defaut, donc 5 min avant scale down
-      stabilizationWindowSeconds: 10
-      policies:
-      # type : Pods ou Percent
-      - type: Percent
-        # enleve 50% des pods
-        value: 50
-        # Toutes les 5s. Période max 30min (1800s)
-        periodSeconds: 5
+  minReplicas: 1
+  maxReplicas: 10
   metrics:
   - type: Resource
     resource:
@@ -433,15 +405,4 @@ spec:
       target:
         type: Utilization
         averageUtilization: 50
-status:
-  observedGeneration: 1
-  currentReplicas: 1
-  desiredReplicas: 1
-  currentMetrics:
-  - type: Resource
-    resource:
-      name: cpu
-      current:
-        averageUtilization: 0
-        averageValue: 0
 
