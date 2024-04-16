@@ -162,5 +162,286 @@ data:
 
 --- #Creation des deploiements
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaskapp-deployment
+  labels:
+    app: flaskapp-deployment
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        imagePullPolicy: IfNotPresent
+        image: rocketecommerce:beta
+        ports:
+          - containerPort: 5005
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 450m
+        envFrom:
+        # Injecter toutes les vars d'un secret
+        - secretRef:
+            name: stripe-secret
+        # Injecter toutes les vars de la configMap
+        - configMapRef:
+            name: flask-app-configmap
 
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaskapp-deployment
+  labels:
+    app: flaskapp-deployment
+  namespace: preprod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        imagePullPolicy: IfNotPresent
+        image: rocketecommerce:beta
+        ports:
+          - containerPort: 5005
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 450m
+        envFrom:
+        # Injecter toutes les vars d'un secret
+        - secretRef:
+            name: stripe-secret
+        # Injecter toutes les vars de la configMap
+        - configMapRef:
+            name: flask-app-configmap
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaskapp-deployment
+  labels:
+    app: flaskapp-deployment
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app
+        imagePullPolicy: IfNotPresent
+        image: rocketecommerce:beta
+        ports:
+          - containerPort: 5005
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 450m
+        envFrom:
+        # Injecter toutes les vars d'un secret
+        - secretRef:
+            name: stripe-secret
+        # Injecter toutes les vars de la configMap
+        - configMapRef:
+            name: flask-app-configmap
+
+--- #Mise en place de l'auto scaling
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-flaskapp
+  namespace: prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flaskapp-deployment
+  minReplicas: 3
+  maxReplicas: 50
+  behavior:
+    scaleUp:
+      # scale up immediat 
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 5
+      - type: Pods
+        value: 4
+        periodSeconds: 5
+      selectPolicy: Max
+    scaleDown:
+      # 300 par defaut, donc 5 min avant scale down
+      stabilizationWindowSeconds: 10
+      policies:
+      # type : Pods ou Percent
+      - type: Percent
+        # enleve 50% des pods
+        value: 50
+        # Toutes les 5s. Période max 30min (1800s)
+        periodSeconds: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+status:
+  observedGeneration: 1
+  currentReplicas: 1
+  desiredReplicas: 1
+  currentMetrics:
+  - type: Resource
+    resource:
+      name: cpu
+      current:
+        averageUtilization: 0
+        averageValue: 0
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-flaskapp
+  namespace: preprod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flaskapp-deployment
+  minReplicas: 3
+  maxReplicas: 50
+  behavior:
+    scaleUp:
+      # scale up immediat 
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 5
+      - type: Pods
+        value: 4
+        periodSeconds: 5
+      selectPolicy: Max
+    scaleDown:
+      # 300 par defaut, donc 5 min avant scale down
+      stabilizationWindowSeconds: 10
+      policies:
+      # type : Pods ou Percent
+      - type: Percent
+        # enleve 50% des pods
+        value: 50
+        # Toutes les 5s. Période max 30min (1800s)
+        periodSeconds: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+status:
+  observedGeneration: 1
+  currentReplicas: 1
+  desiredReplicas: 1
+  currentMetrics:
+  - type: Resource
+    resource:
+      name: cpu
+      current:
+        averageUtilization: 0
+        averageValue: 0
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-flaskapp
+  namespace: dev
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flaskapp-deployment
+  minReplicas: 3
+  maxReplicas: 50
+  behavior:
+    scaleUp:
+      # scale up immediat 
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 5
+      - type: Pods
+        value: 4
+        periodSeconds: 5
+      selectPolicy: Max
+    scaleDown:
+      # 300 par defaut, donc 5 min avant scale down
+      stabilizationWindowSeconds: 10
+      policies:
+      # type : Pods ou Percent
+      - type: Percent
+        # enleve 50% des pods
+        value: 50
+        # Toutes les 5s. Période max 30min (1800s)
+        periodSeconds: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+status:
+  observedGeneration: 1
+  currentReplicas: 1
+  desiredReplicas: 1
+  currentMetrics:
+  - type: Resource
+    resource:
+      name: cpu
+      current:
+        averageUtilization: 0
+        averageValue: 0
 
