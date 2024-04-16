@@ -67,7 +67,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: flaskapp-deployment-prod
+  name: flaskapp-deployment
   namespace: prod
   labels:
     app: flask-svc
@@ -85,7 +85,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: flaskapp-deployment-prod
+  name: flaskapp-deployment
   namespace: preprod
   labels:
     app: flask-svc
@@ -103,7 +103,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: flaskapp-deployment-prod
+  name: flaskapp-deployment
   namespace: dev
   labels:
     app: flask-svc
